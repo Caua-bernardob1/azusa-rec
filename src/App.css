@@ -1,0 +1,629 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   RESET & BASE
+   ════════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Nota: idealmente mova esse @import para um <link> no <head> do index.html
+   (com rel="preconnect" para fonts.googleapis.com e fonts.gstatic.com).
+   @import bloqueia o carregamento em paralelo do CSS.
+   ⚠️ Removi "Dancing Script" do import: nenhuma classe deste arquivo a usa
+   (provavelmente sobrou de quando o logo era texto). Se voltar a usar,
+   basta adicionar "&family=Dancing+Script:wght@700" de volta na URL. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-base:      #0d0e1a;
+  --bg-section:   #10111f;
+  --bg-card:      #15162a;
+  --violet:       #7c5cbf;
+  --violet-light: #a07fd4;
+  --violet-15:    rgba(124,92,191,0.15); /* usado nos ícones de contato, derivado de --violet */
+  --violet-25:    rgba(124,92,191,0.25);
+  --text-white:   #f0f0f0;
+  --text-muted:   #9296ab;
+  --text-dim:     #5a5f78;
+  --border:       rgba(255,255,255,0.08);
+  --max-w:        1440px;
+  --px:           clamp(1.25rem, 5vw, 3rem);
+
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text-white);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+}
+
+html { scroll-behavior: smooth; }
+body { min-height: 100vh; overflow-x: hidden; }
+a    { text-decoration: none; color: inherit; }
+ul   { list-style: none; }
+img  { display: block; max-width: 100%; }
+button { cursor: pointer; font-family: inherit; background: none; border: none; }
+
+/* Acessibilidade: respeita quem prefere menos animação */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* Foco visível para navegação por teclado */
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--violet-light);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.az-wrap { width: 100%; overflow-x: hidden; }
+
+.az-divider {
+  height: 1px;
+  background: var(--border);
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   NAVBAR
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.az-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,11,22,0.85);
+  /* ⚠️ -webkit-backdrop-filter adicionado: sem ele, o efeito de vidro fosco
+     não aparece no Safari/iOS, só em Chrome/Firefox recentes. */
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+
+.az-nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 1.1rem var(--px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.az-logo {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.az-logo-img {
+  height: clamp(2.2rem, 6vw, 2.8rem); /* tamanho responsivo, não fixo */
+  width: auto;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Botão hambúrguer — só aparece em mobile */
+.az-nav-toggle {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.25rem;
+}
+.az-nav-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: var(--text-white);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+@media (min-width: 768px) { .az-nav-toggle { display: none; } }
+
+.az-nav-links {
+  display: none;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Menu mobile aberto */
+.az-nav-links.open {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  padding: 1rem var(--px) 1.5rem;
+  background: var(--bg-section);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ⚠️ Reforçado com o seletor completo ".az-nav-links.open" (mesma especificidade
+   da regra acima) para garantir que o layout de desktop sempre vença aqui,
+   independente do estado "menuAberto" do React. Sem isso, se o usuário abrir
+   o menu no mobile e depois redimensionar/girar para desktop, o "position:
+   absolute" do mobile continuava vencendo por especificidade. */
+@media (min-width: 768px) {
+  .az-nav-links,
+  .az-nav-links.open {
+    display: flex;
+    position: static;
+    flex-direction: row;
+    padding: 0;
+    background: none;
+    border-bottom: none;
+  }
+}
+
+.az-nav-links li a {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.az-nav-links li a:hover {
+  color: var(--text-white);
+  background: rgba(255,255,255,0.05);
+}
+
+.az-nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+.az-nav-icons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+.az-nav-icons a:hover {
+  color: var(--text-white);
+  background: rgba(255,255,255,0.06);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HERO — texto à esquerda, foto à direita
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.az-hero {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 3rem var(--px) 5rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+@media (min-width: 860px) {
+  .az-hero {
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5rem;
+    padding: 3rem var(--px) 6rem;
+  }
+}
+
+.az-hero-text { max-width: 32rem; }
+
+.az-hero-title {
+  font-size: clamp(1.9rem, 4.5vw, 3rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text-white);
+  margin-bottom: 1.25rem;
+}
+
+.az-hero-sub {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 2.25rem;
+}
+
+.az-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-white);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.25s ease;
+}
+.az-btn:hover {
+  border-color: var(--violet-light);
+  background: rgba(160,127,212,0.12);
+  color: var(--violet-light);
+  transform: translateY(-2px);
+}
+
+/* Foto do hero */
+.az-hero-img { position: relative; }
+
+.az-img-frame {
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 4/3;
+  border: 1px solid var(--border);
+}
+.az-img-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) brightness(0.95);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SOBRE
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.az-about {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 5rem var(--px);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+@media (min-width: 860px) {
+  .az-about { grid-template-columns: 1fr 1.2fr; gap: 4.5rem; padding: 7rem var(--px); }
+}
+
+.az-about-img {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4/5;
+}
+.az-about-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.95) brightness(0.92);
+}
+.az-star {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  font-size: 1.4rem;
+  color: rgba(255,255,255,0.3);
+}
+
+.az-about-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--violet-light);
+  margin-bottom: 1.25rem;
+}
+
+.az-about-body {
+  font-size: 1.05rem;
+  color: var(--text-white);
+  line-height: 1.75;
+  margin-bottom: 1.1rem;
+  font-weight: 400; /* neutraliza o bold padrão de h2 (mudamos p -> h2 no JSX) */
+}
+
+.az-about-body2 {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+.az-about-body2 strong { color: var(--text-white); font-weight: 600; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   PORTFÓLIO
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.az-port {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 5rem var(--px);
+}
+@media (min-width: 860px) { .az-port { padding: 7rem var(--px); } }
+
+.pf-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--violet-light);
+  margin-bottom: 0.75rem;
+}
+
+.pf-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 2.5rem;
+}
+
+.pf-cat {
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+.pf-cat:hover {
+  border-color: rgba(160,127,212,0.4);
+  color: var(--text-white);
+}
+.pf-cat.active {
+  background: var(--violet);
+  border-color: var(--violet);
+  color: #fff;
+}
+
+/* Grid genérico — mantido para uso futuro fora do portfólio de vídeos.
+   ⚠️ Hoje NÃO é necessário combiná-lo com .pf-grid-vid no mesmo elemento
+   (o JSX aplica os dois juntos), já que .pf-grid-vid sozinho já define
+   todos os breakpoints necessários. Não quebra nada, é só redundante. */
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.1rem;
+}
+@media (min-width: 1024px) { .pf-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ─── Grid de vídeos locais com lazy load ──────────────────────────────────── */
+
+.pf-grid-vid {
+  display: grid;
+  grid-template-columns: 1fr;          /* mobile: 1 coluna */
+  gap: 1.5rem;
+  align-items: start;
+}
+/* Mobile-first: menor breakpoint primeiro, maior depois — assim o de 1580px
+   realmente sobrescreve o de 1024px em telas grandes. */
+@media (min-width: 1024px) { .pf-grid-vid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1580px) { .pf-grid-vid { grid-template-columns: repeat(3, 1fr); } }
+
+/* Card que envolve cada vídeo */
+.pf-card-vid {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: border-color 0.25s ease, transform 0.25s ease;
+}
+.pf-card-vid:hover {
+  border-color: rgba(160,127,212,0.35);
+  transform: translateY(-3px);
+}
+
+/* Wrapper mantém proporção 16/9 */
+.pf-vid-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #0a0a14;
+  overflow: hidden;
+}
+
+/* Placeholder exibido antes do vídeo carregar */
+.pf-vid-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a14;
+}
+
+.pf-vid-icon {
+  font-size: 2rem;
+  color: var(--violet-light);
+  opacity: 0.5;
+}
+
+/* Estado de erro (vídeo que falhou ao carregar — ver App.jsx onError) */
+.pf-vid-erro {
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pf-vid-erro .pf-vid-icon {
+  color: #d99a3f;
+  opacity: 0.8;
+}
+.pf-vid-erro-txt {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* Elemento <video> em si */
+.pf-vid-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Legenda abaixo do vídeo */
+.pf-ig-caption {
+  padding: 0.85rem 0.25rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CONTATO
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.ct {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 5rem var(--px);
+}
+
+/* Cabeçalho centralizado (label + título + subtítulo em coluna única),
+   mesmo padrão visual do cabeçalho do portfólio. */
+.ct-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+/* ⚠️ Antes essa classe não existia no CSS, por isso "CONTATO" saía sem cor
+   e sem o letter-spacing — ficava "sumido" perto do título. Espelhei o
+   .pf-label do portfólio pra manter a mesma identidade visual. */
+.ct-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--violet-light);
+  margin-bottom: 0.75rem;
+}
+
+.ct-title { max-width: 32rem; margin: 0 auto 1rem; }
+.ct-sub   { max-width: 28rem; margin: 0 auto; }
+
+.ct-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+/* Uma única regra para 860px, sem duplicata conflitante */
+@media (min-width: 860px) {
+  .ct { padding: 6rem var(--px); }
+
+  .ct-body {
+    grid-template-columns: 1.3fr 1fr;
+    align-items: start;
+    gap: 3.5rem;
+  }
+}
+
+.ct-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.ct-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  transition: all 0.25s ease;
+}
+.ct-btn:hover {
+  border-color: rgba(160,127,212,0.4);
+  background: #181a32;
+  transform: translateX(4px);
+}
+
+.ct-btn-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  border-radius: 8px;
+  /* ⚠️ Antes era rgba(124,92,191,...) escrito na mão — troquei pelas
+     variáveis derivadas de --violet, definidas lá no :root, pra não
+     ficar dessincronizado se a paleta mudar um dia. */
+  background: var(--violet-15);
+  border: 1px solid var(--violet-25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--violet-light);
+}
+.ct-btn-icon svg { width: 1.2rem; height: 1.2rem; }
+
+.ct-btn-text { flex: 1; }
+.ct-btn-name { font-size: 0.9rem; font-weight: 600; color: var(--text-white); }
+.ct-btn-handle { font-size: 0.78rem; color: var(--text-dim); margin-top: 0.15rem; }
+
+.ct-btn-arrow {
+  font-size: 1.1rem;
+  color: var(--text-dim);
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+.ct-btn:hover .ct-btn-arrow { transform: translateX(3px); color: var(--violet-light); }
+
+.ct-infos {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+}
+
+.ct-info-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+}
+.ct-info-val {
+  font-size: 0.9rem;
+  color: var(--text-white);
+  font-weight: 500;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FOOTER
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.ft {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 1rem var(--px) 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.ft-copy {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.ft-stars {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.5em;
+}
