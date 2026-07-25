@@ -27,7 +27,45 @@ const PROJETOS = [
   { cat: "Exposição Agro", titulo: "Dia 02 - Expoínga", src: "assets/videos-expoinga/expoinga-dia-02.mp4" },
 ];
 
-// 5. COMPONENTE — vídeo com lazy load via IntersectionObserver
+// 5. COMPONENTE — envolve qualquer bloco e faz ele "aparecer" (fade + subida)
+// quando entra na viewport, usando IntersectionObserver (mesma técnica do
+// LazyVideo). O "delay" (ms) serve pra criar efeito de cascata entre itens
+// de uma mesma grade (ex: cards do portfólio). Aceita "id" pra continuar
+// funcionando como âncora dos links do menu (#sobre, #contato).
+function Reveal({ children, delay = 0, as: Tag = "div", className = "", id }) {
+  const ref = useRef(null);
+  const [visivel, setVisivel] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisivel(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <Tag
+      ref={ref}
+      id={id}
+      className={`reveal ${visivel ? "reveal-visivel" : ""} ${className}`.trim()}
+      style={delay ? { transitionDelay: `${delay}ms` } : undefined}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+// 6. COMPONENTE — vídeo com lazy load via IntersectionObserver
 function LazyVideo({ src, titulo }) {
   const cardRef = useRef(null);
   const [loaded, setLoaded] = useState(false);
@@ -78,7 +116,7 @@ function LazyVideo({ src, titulo }) {
   );
 }
 
-// 6. COMPONENTE PRINCIPAL
+// 7. COMPONENTE PRINCIPAL
 export default function AzusaRec() {
   const categorias = [...new Set(PROJETOS.map((p) => p.cat))];
   const [catAtiva, setCatAtiva] = useState(categorias[0]);
@@ -132,7 +170,7 @@ export default function AzusaRec() {
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* HERO — sem Reveal: já visível no primeiro paint, não faz sentido escondê-lo */}
       <section className="az-hero" id="inicio">
         <div className="az-hero-text">
           <h1 className="az-hero-title">Contando histórias com visão e propósito</h1>
@@ -153,7 +191,7 @@ export default function AzusaRec() {
       <div className="az-divider" />
 
       {/* SOBRE */}
-      <section className="az-about" id="sobre">
+      <Reveal as="section" id="sobre" className="az-about">
         <div className="az-about-img">
           <img src={IMG_SOBRE} alt="Equipe Azusa Rec em ação" />
           <div className="az-star">✦</div>
@@ -170,29 +208,34 @@ export default function AzusaRec() {
             <strong>criatividade e atenção aos detalhes.</strong>
           </p>
         </div>
-      </section>
+      </Reveal>
 
       <div className="az-divider" />
 
       {/* PORTFÓLIO */}
       <section className="az-port" id="portfolio">
         <div className="az-port-vids">
-          <p className="pf-label">PORTFÓLIO</p>
-          <div className="pf-cats">
-            {categorias.map((cat) => (
-              <button
-                key={cat}
-                className={`pf-cat ${cat === catAtiva ? "active" : ""}`}
-                aria-pressed={cat === catAtiva}
-                onClick={() => setCatAtiva(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <Reveal>
+            <p className="pf-label">PORTFÓLIO</p>
+            <div className="pf-cats">
+              {categorias.map((cat) => (
+                <button
+                  key={cat}
+                  className={`pf-cat ${cat === catAtiva ? "active" : ""}`}
+                  aria-pressed={cat === catAtiva}
+                  onClick={() => setCatAtiva(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </Reveal>
           <div className="pf-grid pf-grid-vid">
-            {projetosFiltrados.map((projeto) => (
-              <LazyVideo key={projeto.src} src={projeto.src} titulo={projeto.titulo} />
+            {projetosFiltrados.map((projeto, i) => (
+              // delay em cascata: cada card aparece um pouquinho depois do anterior
+              <Reveal key={projeto.src} delay={(i % 3) * 90}>
+                <LazyVideo src={projeto.src} titulo={projeto.titulo} />
+              </Reveal>
             ))}
           </div>
         </div>
@@ -201,7 +244,7 @@ export default function AzusaRec() {
       <div className="az-divider" />
 
       {/* CONTATO */}
-      <section className="ct" id="contato">
+      <Reveal as="section" id="contato" className="ct">
         <div className="ct-top">
           <div>
             <p className="ct-label">CONTATO</p>
@@ -255,7 +298,7 @@ export default function AzusaRec() {
             </div>
           </div>
         </div>
-      </section>
+      </Reveal>
 
       {/* RODAPÉ */}
       <footer className="ft">

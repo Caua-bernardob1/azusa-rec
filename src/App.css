@@ -1,21 +1,11 @@
-/* ════════════════════════════════════════════════════════════════════════════
-   RESET & BASE
-   ════════════════════════════════════════════════════════════════════════════ */
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Nota: idealmente mova esse @import para um <link> no <head> do index.html
-   (com rel="preconnect" para fonts.googleapis.com e fonts.gstatic.com).
-   @import bloqueia o carregamento em paralelo do CSS.
-   ⚠️ Removi "Dancing Script" do import: nenhuma classe deste arquivo a usa
-   (provavelmente sobrou de quando o logo era texto). Se voltar a usar,
-   basta adicionar "&family=Dancing+Script:wght@700" de volta na URL. */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   --bg-base:      #0d0e1a;
-  --bg-section:   #10111f;
-  --bg-card:      #15162a;
+  --bg-section:   rgba(16,17,31,0.7);
+  --bg-card:      rgba(21,22,42,0.55);
   --violet:       #7c5cbf;
   --violet-light: #a07fd4;
   --violet-15:    rgba(124,92,191,0.15); /* usado nos ícones de contato, derivado de --violet */
@@ -35,6 +25,30 @@
 
 html { scroll-behavior: smooth; }
 body { min-height: 100vh; overflow-x: hidden; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(124,92,191,0.35), transparent 45%),
+    radial-gradient(circle at 85% 15%, rgba(160,127,212,0.25), transparent 40%),
+    radial-gradient(circle at 75% 75%, rgba(124,92,191,0.28), transparent 50%),
+    radial-gradient(circle at 20% 85%, rgba(90,60,150,0.3), transparent 45%),
+    var(--bg-base);
+  filter: blur(60px) saturate(1.1);
+  pointer-events: none;
+}
+
+/* Camada 2: escurecimento gradual pra manter o contraste do texto ao rolar */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(13,14,26,0.35), rgba(13,14,26,0.75) 60%, rgba(13,14,26,0.95));
+  pointer-events: none;
+}
 a    { text-decoration: none; color: inherit; }
 ul   { list-style: none; }
 img  { display: block; max-width: 100%; }
@@ -54,13 +68,48 @@ button:focus-visible {
   border-radius: 4px;
 }
 
-.az-wrap { width: 100%; overflow-x: hidden; }
+/* ════════════════════════════════════════════════════════════════════════════
+   REVEAL — animação de entrada ao rolar a página (componente Reveal no JSX)
+   ════════════════════════════════════════════════════════════════════════════ */
 
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal-visivel {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.az-wrap { width: 100%; overflow-x: hidden; }
 .az-divider {
+  position: relative;
   height: 1px;
-  background: var(--border);
   max-width: var(--max-w);
   margin: 0 auto;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 15%,
+    rgba(160,127,212,0.5) 50%,
+    var(--border) 85%,
+    transparent
+  );
+}
+.az-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--violet-light);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 14px 3px rgba(160,127,212,0.55);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -71,9 +120,7 @@ button:focus-visible {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10,11,22,0.85);
-  /* ⚠️ -webkit-backdrop-filter adicionado: sem ele, o efeito de vidro fosco
-     não aparece no Safari/iOS, só em Chrome/Firefox recentes. */
+  background: rgba(10,11,22,0.6);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
@@ -141,14 +188,11 @@ button:focus-visible {
   right: 0;
   padding: 1rem var(--px) 1.5rem;
   background: var(--bg-section);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
 }
 
-/* ⚠️ Reforçado com o seletor completo ".az-nav-links.open" (mesma especificidade
-   da regra acima) para garantir que o layout de desktop sempre vença aqui,
-   independente do estado "menuAberto" do React. Sem isso, se o usuário abrir
-   o menu no mobile e depois redimensionar/girar para desktop, o "position:
-   absolute" do mobile continuava vencendo por especificidade. */
 @media (min-width: 768px) {
   .az-nav-links,
   .az-nav-links.open {
@@ -382,10 +426,6 @@ button:focus-visible {
   color: #fff;
 }
 
-/* Grid genérico — mantido para uso futuro fora do portfólio de vídeos.
-   ⚠️ Hoje NÃO é necessário combiná-lo com .pf-grid-vid no mesmo elemento
-   (o JSX aplica os dois juntos), já que .pf-grid-vid sozinho já define
-   todos os breakpoints necessários. Não quebra nada, é só redundante. */
 .pf-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -412,6 +452,10 @@ button:focus-visible {
   overflow: hidden;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  /* --bg-card agora é translúcido; o blur evita que o fundo abstrato
+     "vaze" através do card de forma nítida demais. */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   transition: border-color 0.25s ease, transform 0.25s ease;
 }
 .pf-card-vid:hover {
@@ -497,9 +541,6 @@ button:focus-visible {
   text-align: center;
 }
 
-/* ⚠️ Antes essa classe não existia no CSS, por isso "CONTATO" saía sem cor
-   e sem o letter-spacing — ficava "sumido" perto do título. Espelhei o
-   .pf-label do portfólio pra manter a mesma identidade visual. */
 .ct-label {
   font-size: 0.7rem;
   font-weight: 700;
@@ -542,6 +583,8 @@ button:focus-visible {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   transition: all 0.25s ease;
 }
 .ct-btn:hover {
@@ -555,9 +598,6 @@ button:focus-visible {
   height: 2.6rem;
   flex-shrink: 0;
   border-radius: 8px;
-  /* ⚠️ Antes era rgba(124,92,191,...) escrito na mão — troquei pelas
-     variáveis derivadas de --violet, definidas lá no :root, pra não
-     ficar dessincronizado se a paleta mudar um dia. */
   background: var(--violet-15);
   border: 1px solid var(--violet-25);
   display: flex;
@@ -586,6 +626,8 @@ button:focus-visible {
   border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--bg-card);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .ct-info-label {
