@@ -194,7 +194,6 @@ export default function AzusaRec() {
       <Reveal as="section" id="sobre" className="az-about">
         <div className="az-about-img">
           <img src={IMG_SOBRE} alt="Equipe Azusa Rec em ação" />
-          <div className="az-star">✦</div>
         </div>
         <div className="az-about-text">
           <p className="az-about-eyebrow">SOBRE NÓS →</p>

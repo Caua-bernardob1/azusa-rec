@@ -1,4 +1,4 @@
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0 ;padding: 0; }
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -25,6 +25,8 @@
 
 html { scroll-behavior: smooth; }
 body { min-height: 100vh; overflow-x: hidden; }
+
+/* Camada 1: "borrões" de cor com blur, fixos (não rolam com o scroll) */
 body::before {
   content: "";
   position: fixed;
@@ -83,8 +85,12 @@ button:focus-visible {
   opacity: 1;
   transform: translateY(0);
 }
+/* prefers-reduced-motion (definido lá em cima) já zera as durações de
+   transição pra 0.01ms globalmente, então quem prefere menos animação
+   só vê o conteúdo aparecer quase instantaneamente, sem o movimento. */
 
 .az-wrap { width: 100%; overflow-x: hidden; }
+
 .az-divider {
   position: relative;
   height: 1px;
@@ -121,6 +127,8 @@ button:focus-visible {
   top: 0;
   z-index: 100;
   background: rgba(10,11,22,0.6);
+  /* -webkit-backdrop-filter adicionado: sem ele, o efeito de vidro fosco
+     não aparece no Safari/iOS, só em Chrome/Firefox recentes. */
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border);
@@ -144,7 +152,7 @@ button:focus-visible {
 
 .az-logo-img {
   height: clamp(2.2rem, 6vw, 2.8rem); /* tamanho responsivo, não fixo */
-  width: auto;
+  width: 100px;
   max-height: 100%;
   object-fit: contain;
   display: block;
@@ -426,6 +434,10 @@ button:focus-visible {
   color: #fff;
 }
 
+/* Grid genérico — mantido para uso futuro fora do portfólio de vídeos.
+   ⚠️ Hoje NÃO é necessário combiná-lo com .pf-grid-vid no mesmo elemento
+   (o JSX aplica os dois juntos), já que .pf-grid-vid sozinho já define
+   todos os breakpoints necessários. Não quebra nada, é só redundante. */
 .pf-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -541,6 +553,9 @@ button:focus-visible {
   text-align: center;
 }
 
+/* ⚠️ Antes essa classe não existia no CSS, por isso "CONTATO" saía sem cor
+   e sem o letter-spacing — ficava "sumido" perto do título. Espelhei o
+   .pf-label do portfólio pra manter a mesma identidade visual. */
 .ct-label {
   font-size: 0.7rem;
   font-weight: 700;
@@ -598,6 +613,9 @@ button:focus-visible {
   height: 2.6rem;
   flex-shrink: 0;
   border-radius: 8px;
+  /* ⚠️ Antes era rgba(124,92,191,...) escrito na mão — troquei pelas
+     variáveis derivadas de --violet, definidas lá no :root, pra não
+     ficar dessincronizado se a paleta mudar um dia. */
   background: var(--violet-15);
   border: 1px solid var(--violet-25);
   display: flex;
